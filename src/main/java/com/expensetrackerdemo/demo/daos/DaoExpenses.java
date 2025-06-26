@@ -34,7 +34,7 @@ public class DaoExpenses {
         return ResponseEntity.ok("Data inserted successfully");
     }
 
-    public ResponseEntity update(Expense expense){
+    public ResponseEntity<String> update(Expense expense){
         Optional<Expense> optionalExpense = repoExpenses.findById(expense.getId());
         ResponseEntity responseEntity = null;
 
