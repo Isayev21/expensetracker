@@ -2,10 +2,7 @@ package com.expensetrackerdemo.demo.entity;
 
 import com.expensetrackerdemo.demo.enums.ExpenseCategoryEnum;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import java.time.LocalDate;
 
@@ -23,6 +20,11 @@ public class Expense {
     @JsonIgnore
     @Column(nullable = false, columnDefinition = "TINYINT(1)")
     private boolean deleted;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     public Expense() {
     }
@@ -84,6 +86,14 @@ public class Expense {
         this.deleted = deleted;
     }
 
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
     @Override
     public String toString() {
         return "Expense{" +
@@ -93,6 +103,7 @@ public class Expense {
                 ", expenseCategory=" + expenseCategory +
                 ", date=" + date +
                 ", deleted=" + deleted +
+                ", user=" + user +
                 '}';
     }
 }
