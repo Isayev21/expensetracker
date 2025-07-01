@@ -1,10 +1,16 @@
 package com.expensetrackerdemo.demo.daos;
 
 import com.expensetrackerdemo.demo.entity.Expense;
+import com.expensetrackerdemo.demo.entity.ExpensePageResponse;
 import com.expensetrackerdemo.demo.entity.User;
+import com.expensetrackerdemo.demo.enums.ExpenseCategoryEnum;
 import com.expensetrackerdemo.demo.repos.RepoExpenses;
 import com.expensetrackerdemo.demo.repos.RepoUser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -114,5 +120,36 @@ public class DaoExpenses {
             return ResponseEntity.noContent().build();
         }
 
+    }
+
+    public ResponseEntity<?> selectPaginated(int page, int size){
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = repoUser.findByUserName(username).orElseThrow();
+
+        PageRequest pageRequest = PageRequest.of(page,size);
+        Page<Expense> expensePage = repoExpenses.findByUser(user, pageRequest);
+        ExpensePageResponse pageResponse = new ExpensePageResponse();
+        pageResponse.setExpenses(expensePage.getContent());
+        pageResponse.setCurrentPage(expensePage.getNumber());
+        pageResponse.setTotalPages(expensePage.getTotalPages());
+        pageResponse.setTotalItems(expensePage.getTotalElements());
+
+        return ResponseEntity.ok(pageResponse);
+    }
+
+    public ResponseEntity<?> getExpensesWithFilter(String category, String sortBy, int page, int size){
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = repoUser.findByUserName(username).orElseThrow();
+
+        Pageable pageable = PageRequest.of(page,size, Sort.by(sortBy));
+       Page<Expense> expenses;
+
+       if(category != null){
+           expenses = repoExpenses.findByUserAndExpenseCategory(user, ExpenseCategoryEnum.valueOf(category), pageable);
+       }else{
+           expenses = repoExpenses.findByUser(user,pageable);
+       }
+
+       return ResponseEntity.ok(expenses);
     }
 }

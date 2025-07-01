@@ -15,27 +15,40 @@ public class ApiExpense {
     DaoExpenses daoExpenses;
 
     @PostMapping("/insert")
-    public ResponseEntity<String> insert(@RequestBody Expense expense){
+    public ResponseEntity<String> insert(@RequestBody Expense expense) {
         return daoExpenses.insert(expense);
     }
 
     @PostMapping("/delete")
-    public ResponseEntity<String> delete(@RequestParam Long id){
+    public ResponseEntity<String> delete(@RequestParam Long id) {
         return daoExpenses.delete(id);
     }
 
     @PostMapping("/update")
-    public ResponseEntity update(@RequestBody Expense expense){
+    public ResponseEntity update(@RequestBody Expense expense) {
         return daoExpenses.update(expense);
     }
 
     @GetMapping("/select")
-    public ResponseEntity<List<Expense>> select(){
+    public ResponseEntity<List<Expense>> select() {
         return daoExpenses.select();
     }
 
     @GetMapping("/selectById")
-    public ResponseEntity<?> selectById(@RequestParam Long id){
+    public ResponseEntity<?> selectById(@RequestParam Long id) {
         return daoExpenses.selectById(id);
+    }
+
+    @GetMapping("/paginated")
+    public ResponseEntity<?> getPaginatedExpenses(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+        return daoExpenses.selectPaginated(page, size);
+    }
+
+    @GetMapping("/filterExpenses")
+    public ResponseEntity<?> getFilteredExpenses(@RequestParam(required = false) String category,
+                                                 @RequestParam(defaultValue = "date") String sortBy,
+                                                 @RequestParam(defaultValue = "0") int page,
+                                                 @RequestParam(defaultValue = "10") int size) {
+        return daoExpenses.getExpensesWithFilter(category, sortBy, page, size);
     }
 }

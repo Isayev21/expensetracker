@@ -12,7 +12,7 @@ import java.util.Date;
 
 @Component
 public class JwtUtil {
-    private String secret = "MyUltraSecureJwtSecretKey_2025$$";
+    private final String secret = "MyUltraSecureJwtSecretKey_2025$$";
     private final Key key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
 
     public String generateToken(String userName){
