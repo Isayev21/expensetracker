@@ -142,7 +142,7 @@ public class DaoExpenses {
         User user = repoUser.findByUserName(username).orElseThrow();
 
         Pageable pageable = PageRequest.of(page,size, Sort.by(sortBy));
-       Page<Expense> expenses;
+         Page<Expense> expenses;
 
        if(category != null){
            expenses = repoExpenses.findByUserAndExpenseCategory(user, ExpenseCategoryEnum.valueOf(category), pageable);
