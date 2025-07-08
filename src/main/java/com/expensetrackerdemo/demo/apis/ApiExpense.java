@@ -51,4 +51,12 @@ public class ApiExpense {
                                                  @RequestParam(defaultValue = "10") int size) {
         return daoExpenses.getExpensesWithFilter(category, sortBy, page, size);
     }
+
+    @GetMapping("/getMonthlyTotalExpense")
+    public ResponseEntity<?> getMonthlyTotalExpense(@RequestParam int month,
+                                                    @RequestParam int year,
+                                                    @RequestParam(defaultValue = "0") int page,
+                                                    @RequestParam(defaultValue = "10") int size){
+        return daoExpenses.getMonthlyTotalExpense(month, year, page,size);
+    }
 }

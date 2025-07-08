@@ -17,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
 
@@ -151,5 +152,28 @@ public class DaoExpenses {
        }
 
        return ResponseEntity.ok(expenses);
+    }
+
+    public ResponseEntity<?> getMonthlyTotalExpense(int month, int year, int page, int size) {
+        if (month < 1 || month > 12) {
+            return ResponseEntity.badRequest().body("Month must be between 1 and 12.");
+        }
+
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = repoUser.findByUserName(username).orElseThrow();
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.withDayOfMonth(YearMonth.of(year, month).lengthOfMonth());
+
+        Page<Expense> monthlyTotalExpense = repoExpenses.findByUserAndDateBetween(user, startDate, endDate, pageable);
+        ExpensePageResponse pageResponse = new ExpensePageResponse();
+        pageResponse.setExpenses(monthlyTotalExpense.toList());
+        pageResponse.setCurrentPage(monthlyTotalExpense.getNumber());
+        pageResponse.setTotalPages(monthlyTotalExpense.getTotalPages());
+        pageResponse.setTotalItems(monthlyTotalExpense.getTotalElements());
+
+        return ResponseEntity.ok(pageResponse);
     }
 }
