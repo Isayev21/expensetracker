@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
@@ -28,7 +29,7 @@ public class DaoExpenses {
     @Autowired
     RepoUser repoUser;
 
-    public ResponseEntity<String> insert(Expense expense){
+    public ResponseEntity<String> insert(Expense expense) {
 
         String userName = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -36,16 +37,16 @@ public class DaoExpenses {
                 () -> new RuntimeException("User not found")
         );
 
-        if(expense.getTitle() == null || expense.getTitle().isBlank()){
+        if (expense.getTitle() == null || expense.getTitle().isBlank()) {
             return ResponseEntity.badRequest().body("Title cannot be empty");
         }
-        if(expense.getAmount() == null || expense.getAmount() <= 0){
+        if (expense.getAmount() == null || expense.getAmount() <= 0) {
             return ResponseEntity.badRequest().body("Amount cannot be less than zero");
         }
-        if(expense.getDate() == null){
+        if (expense.getDate() == null) {
             expense.setDate(LocalDate.now());
         }
-        if(expense.getExpenseCategory() == null){
+        if (expense.getExpenseCategory() == null) {
             return ResponseEntity.badRequest().body("Expense category is required");
         }
 
@@ -55,7 +56,7 @@ public class DaoExpenses {
         return ResponseEntity.ok("Data inserted successfully");
     }
 
-    public ResponseEntity<String> update(Expense expense){
+    public ResponseEntity<String> update(Expense expense) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = repoUser.findByUserName(username).orElseThrow();
 
@@ -63,7 +64,7 @@ public class DaoExpenses {
 
         if (optionalExpense.isPresent()) {
             Expense existingExpense = optionalExpense.get();
-            if(!existingExpense.getUser().getId().equals(user.getId())){
+            if (!existingExpense.getUser().getId().equals(user.getId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not allowed to update this expense");
             }
             existingExpense.setTitle(expense.getTitle());
@@ -72,41 +73,41 @@ public class DaoExpenses {
             existingExpense.setDate(expense.getDate());
 
             repoExpenses.save(existingExpense);
-           return ResponseEntity.ok("Expense updated successfully");
+            return ResponseEntity.ok("Expense updated successfully");
         } else {
             return (ResponseEntity<String>) ResponseEntity.notFound();
         }
     }
 
-    public ResponseEntity<String> delete(Long id){
+    public ResponseEntity<String> delete(Long id) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = repoUser.findByUserName(username).orElseThrow();
         Optional<Expense> optionalExpense = repoExpenses.findById(id);
-        if(optionalExpense.isPresent()){
+        if (optionalExpense.isPresent()) {
             Expense existingExpense = optionalExpense.get();
-            if(!existingExpense.getUser().getId().equals(user.getId())){
+            if (!existingExpense.getUser().getId().equals(user.getId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not authorized perform this operation");
             }
             existingExpense.setDeleted(true);
             repoExpenses.save(existingExpense);
             return ResponseEntity.ok("Expense deleted successfully");
-        }else{
+        } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Expense not found");
         }
     }
 
-    public ResponseEntity<List<Expense>> select(){
+    public ResponseEntity<List<Expense>> select() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = repoUser.findByUserName(username).orElseThrow();
         List<Expense> userExpenses = repoExpenses.findByUser(user);
-        if(!userExpenses.isEmpty()){
+        if (!userExpenses.isEmpty()) {
             return ResponseEntity.ok(userExpenses);
-        }else{
+        } else {
             return ResponseEntity.noContent().build();
         }
     }
 
-    public ResponseEntity<?> selectById(Long id){
+    public ResponseEntity<?> selectById(Long id) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = repoUser.findByUserName(username).orElseThrow();
 
@@ -117,17 +118,17 @@ public class DaoExpenses {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
             }
             return ResponseEntity.ok(expense);
-        }else {
+        } else {
             return ResponseEntity.noContent().build();
         }
 
     }
 
-    public ResponseEntity<?> selectPaginated(int page, int size){
+    public ResponseEntity<?> selectPaginated(int page, int size) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = repoUser.findByUserName(username).orElseThrow();
 
-        PageRequest pageRequest = PageRequest.of(page,size);
+        PageRequest pageRequest = PageRequest.of(page, size);
         Page<Expense> expensePage = repoExpenses.findByUser(user, pageRequest);
         ExpensePageResponse pageResponse = new ExpensePageResponse();
         pageResponse.setExpenses(expensePage.getContent());
@@ -138,20 +139,20 @@ public class DaoExpenses {
         return ResponseEntity.ok(pageResponse);
     }
 
-    public ResponseEntity<?> getExpensesWithFilter(String category, String sortBy, int page, int size){
+    public ResponseEntity<?> getExpensesWithFilter(String category, String sortBy, int page, int size) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = repoUser.findByUserName(username).orElseThrow();
 
-        Pageable pageable = PageRequest.of(page,size, Sort.by(sortBy));
-         Page<Expense> expenses;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
+        Page<Expense> expenses;
 
-       if(category != null){
-           expenses = repoExpenses.findByUserAndExpenseCategory(user, ExpenseCategoryEnum.valueOf(category), pageable);
-       }else{
-           expenses = repoExpenses.findByUser(user,pageable);
-       }
+        if (category != null) {
+            expenses = repoExpenses.findByUserAndExpenseCategory(user, ExpenseCategoryEnum.valueOf(category), pageable);
+        } else {
+            expenses = repoExpenses.findByUser(user, pageable);
+        }
 
-       return ResponseEntity.ok(expenses);
+        return ResponseEntity.ok(expenses);
     }
 
     public ResponseEntity<?> getMonthlyTotalExpense(int month, int year, int page, int size) {
@@ -175,5 +176,26 @@ public class DaoExpenses {
         pageResponse.setTotalItems(monthlyTotalExpense.getTotalElements());
 
         return ResponseEntity.ok(pageResponse);
+    }
+
+    public void exportExpenseCSV(PrintWriter writer, List<Expense> expenses) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = repoUser.findByUserName(username).orElseThrow();
+
+        List<Expense> expenseList = repoExpenses.findByUser(user);
+
+
+
+        writer.println("ID, Title, Amount, Date, Category");
+
+        for (Expense expense : expenses) {
+            writer.printf("%d, %s, %.2f, %s, %s%n",
+                    expense.getId(),
+                    expense.getTitle().replace(",", ""),
+                    expense.getAmount(),
+                    expense.getDate(),
+                    expense.getExpenseCategory());
+        }
+
     }
 }
